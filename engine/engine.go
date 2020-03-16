@@ -30,6 +30,12 @@ func Run(seeds ...Request) {
 				parseResult.Requests[i].Url = r.Url + parseResult.Requests[i].Url
 			}
 		}
+		for i := 0; i < len(parseResult.Items); i++ {
+			if r.Data != nil {
+				parseResult.Items[i] = r.Data.(string) + parseResult.Items[i].(string)
+			}
+		}
+
 		requests = append(requests, parseResult.Requests...)
 
 		for _, item := range parseResult.Items {

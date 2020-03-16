@@ -31,11 +31,13 @@ func ParseRegionList(contents []byte) engine.ParseResult {
 	matches = re.FindAllSubmatch(data, -1)
 	result := engine.ParseResult{}
 	for _, m := range matches {
-		result.Items = append(result.Items, string(append(province, m[2]...)))
+		item := string(append(province, m[2]...))
+		result.Items = append(result.Items, item)
 		result.Requests = append(
 			result.Requests, engine.Request{
 				Url:        string(m[1]),
-				ParserFunc: engine.NilParser,
+				Data:       item,
+				ParserFunc: ParseRegion,
 			})
 	}
 	return result
