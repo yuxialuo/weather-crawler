@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 
@@ -9,83 +8,41 @@ import (
 	"github.com/yuxialuo/weather-crawler/model"
 )
 
-/*
-<ul class="t clearfix">
-<li class="sky skyid lv2 on">
-<h1>16日（今天）</h1>
-<big class="png40 d01"></big>
-<big class="png40 n01"></big>
-<p title="多云" class="wea">多云</p>
-<p class="tem">
-<span>7</span>/<i>-4℃</i>
-</p>
-<p class="win">
-<em>
-<span title="西南风" class="SW"></span>
-<span title="西南风" class="SW"></span>
-</em>
-<i>5-6级转4-5级</i>
-</p>
-<div class="slid"></div>
-</li>
-<li class="sky skyid lv1">
-*/
-
-const (
-	parseProfileRe = `(?s)class="sky skyid lv2 on"(.*?)class="slid"`
-	titleRe        = `<p title="([^"]+)" class="wea">`
-	tempratureRe   = `<span>([^<]+)</span>/<i>([^℃]+)℃</i>`
-	windRe         = `<span title="([^"]+)" class="SW"></span>`
-	windForceRe    = `<i>([^<]+)</i>`
-)
+//`(?s)class="navbox"(.*?)</span>`
+var parseProfileRe = regexp.MustCompile(`(?s)（今天）(.*?)（明天）`)
+var titleRe = regexp.MustCompile(`class="wea">([^<]+)</p>`)
+var tempratureHighRe = regexp.MustCompile(`<span>([^<]+)</span>/<i>[^℃]+℃</i>`)
+var tempratureLowRe = regexp.MustCompile(`<span>[^<]+</span>/<i>([^℃]+)℃</i>`)
+var windRe = regexp.MustCompile(`<span\stitle="([^"]+)"\sclass`)
+var windForceRe = regexp.MustCompile(`</em>[\s]+<i>([^\s]+)</i>`)
 
 func ParseProfile(contents []byte) engine.ParseResult {
-	re := regexp.MustCompile(parseProfileRe)
-	data := re.Find(contents)
-	fmt.Println(string(data))
+	data := parseProfileRe.Find(contents)
 	profile := model.Profile{}
 
-	re = regexp.MustCompile(titleRe)
-	match := re.FindSubmatch(data)
-	if match != nil {
-		profile.Weather = string(match[1])
-	}
+	profile.Weather = extractString(data, titleRe)
+	profile.TemperatureHigh = extractInt(data, tempratureHighRe)
+	profile.TemperatureLow = extractInt(data, tempratureLowRe)
+	profile.Wind = extractString(data, windRe)
+	profile.WindForce = extractString(data, windForceRe)
 
-	re = regexp.MustCompile(tempratureRe)
-	match = re.FindSubmatch(data)
-	if match != nil {
-		high, err := strconv.Atoi(string(match[1]))
-		if err == nil {
-			profile.TemperatureHigh = high
-		}
-		low, err := strconv.Atoi(string(match[2]))
-		if err == nil {
-			profile.TemperatureLow = low
-		}
+	result := engine.ParseResult{
+		Items: []interface{}{profile},
 	}
+	return result
+}
 
-	re = regexp.MustCompile(windRe)
-	match = re.FindSubmatch(data)
-	if match != nil {
-		profile.Wind = string(match[1])
+func extractInt(contents []byte, re *regexp.Regexp) int {
+	data := extractString(contents, re)
+	n, _ := strconv.Atoi(data)
+	return n
+}
+
+func extractString(contents []byte, re *regexp.Regexp) string {
+	match := re.FindSubmatch(contents)
+	if len(match) >= 2 {
+		return string(match[1])
+	} else {
+		return ""
 	}
-
-	re = regexp.MustCompile(windForceRe)
-	match = re.FindSubmatch(data)
-	if match != nil {
-		profile.WindForce = string(match[1])
-	}
-
-	/*	re = regexp.MustCompile(regionRe)
-		matches := re.FindAllSubmatch(data, -1)
-		result := engine.ParseResult{}
-		for _, m := range matches {
-			result.Items = append(result.Items, string(m[2]))
-			result.Requests = append(
-				result.Requests, engine.Request{
-					Url:        string(m[1]),
-					ParserFunc: engine.NilParser,
-				})
-		}*/
-	return engine.ParseResult{}
 }
