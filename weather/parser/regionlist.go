@@ -13,7 +13,7 @@ const (
 	regionListRe   = `<a href="/([a-z]+/index.shtml)">([^<]+)`
 )
 
-func ParseRegionList(contents []byte) engine.ParseResult {
+func ParseRegionList(contents []byte, _ string) engine.ParseResult {
 	re := regexp.MustCompile(provinceDataRe)
 	data := re.Find(contents)
 
@@ -31,13 +31,13 @@ func ParseRegionList(contents []byte) engine.ParseResult {
 	matches = re.FindAllSubmatch(data, -1)
 	result := engine.ParseResult{}
 	for _, m := range matches {
-		item := string(append(province, m[2]...))
-		result.Items = append(result.Items, item)
+		url := string(m[1])
+		region := string(append(province, m[2]...))
+
 		result.Requests = append(
 			result.Requests, engine.Request{
-				Url:        string(m[1]),
-				Data:       item,
-				ParserFunc: ParseRegion,
+				Url:        url,
+				ParserFunc: RegionParser(region),
 			})
 	}
 	return result

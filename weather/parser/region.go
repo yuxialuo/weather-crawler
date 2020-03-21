@@ -6,30 +6,12 @@ import (
 	"github.com/yuxialuo/weather-crawler/engine"
 )
 
-/*
-const regionRe = `<a href="http://www.weather.com.cn/weather/[0-9]+\.shtml"[^>]*>[^<]+</a>`
-
-func ParseRegion(contents []byte) engine.ParseResult {
-	re := regexp.MustCompile(regionRe)
-	matches = re.FindAllSubmatch(contents, -1)
-	result := engine.ParseResult{}
-	for _, m := range matches {
-		result.Items = append(result.Items, string(m[2])))
-		result.Requests = append(
-			result.Requests, engine.Request{
-				Url:        string(m[1]),
-				ParserFunc: engine.NilParser,
-			})
-	}
-	return result
-}
-*/
 const (
 	parseRegionDataRe = `(?s)class="forecastBox"(.*?)frameborder`
 	regionRe          = `href="(http://www.weather.com.cn/weather/[0-9]+.shtml)"[^>]+>([^<]+)`
 )
 
-func ParseRegion(contents []byte) engine.ParseResult {
+func ParseRegion(contents []byte, url, name string) engine.ParseResult {
 	re := regexp.MustCompile(parseRegionDataRe)
 	data := re.Find(contents)
 
@@ -37,12 +19,19 @@ func ParseRegion(contents []byte) engine.ParseResult {
 	matches := re.FindAllSubmatch(data, -1)
 	result := engine.ParseResult{}
 	for _, m := range matches {
-		result.Items = append(result.Items, string(m[2]))
+		url := string(m[1])
+		county := string(m[2])
 		result.Requests = append(
 			result.Requests, engine.Request{
-				Url:        string(m[1]),
-				ParserFunc: ParseProfile,
+				Url:        url,
+				ParserFunc: ProfileParser(name + county),
 			})
 	}
 	return result
+}
+
+func RegionParser(name string) engine.ParserFunc {
+	return func(c []byte, url string) engine.ParseResult {
+		return ParseRegion(c, url, name)
+	}
 }

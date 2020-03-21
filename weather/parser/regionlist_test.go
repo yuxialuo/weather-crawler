@@ -11,14 +11,11 @@ func TestParseCityList(t *testing.T) {
 		panic(err)
 	}
 
-	result := ParseRegionList(contents)
+	result := ParseRegionList(contents, "", "")
 
 	const resultSize = 14
 	expectedUrls := []string{
 		"shenyang/index.shtml", "dalian/index.shtml", "anshan/index.shtml",
-	}
-	expectedRegions := []string{
-		"辽宁沈阳", "辽宁大连", "辽宁鞍山",
 	}
 
 	if len(result.Requests) != resultSize {
@@ -29,17 +26,6 @@ func TestParseCityList(t *testing.T) {
 		if result.Requests[i].Url != url {
 			t.Errorf("expected url #%d: %s; but was %s",
 				i, url, result.Requests[i].Url)
-		}
-	}
-
-	if len(result.Items) != resultSize {
-		t.Errorf("result should have %d requests; but had %d",
-			resultSize, len(result.Items))
-	}
-	for i, region := range expectedRegions {
-		if result.Items[i].(string) != region {
-			t.Errorf("expected url #%d: %s; but was %s",
-				i, region, result.Items[i].(string))
 		}
 	}
 }
