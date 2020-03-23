@@ -1,5 +1,5 @@
 # weather-crawler
-获取中国部分地区当日天气。
+获取当日天气预报信息。
 
 1)拉取elasticsearch镜像
 docker pull docker.elastic.co/elasticsearch/elasticsearch:7.6.1

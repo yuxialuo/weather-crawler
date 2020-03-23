@@ -11,10 +11,10 @@ import (
 
 var (
 	municipalities = []string{
-		//		"bj",
-		//		"tj",
+		"bj",
+		"tj",
 		"sh",
-		//		"cq",
+		"cq",
 	}
 	provinces = []string{
 		"hebei",
@@ -50,6 +50,7 @@ var (
 )
 
 func main() {
+	fmt.Println("weather crawler service v0.1.1 is running......")
 	itemChan, err := persist.ItemSaver("weather_profile")
 	if err != nil {
 		panic(err)
@@ -61,13 +62,21 @@ func main() {
 	}
 
 	requests := []engine.Request{}
-
-	for _, v := range provinces {
+	/*
+		for _, v := range provinces {
+			r := engine.Request{
+				Url:        fmt.Sprintf("http://%s.weather.com.cn/", v),
+				ParserFunc: parser.ParseRegionList,
+			}
+			requests = append(requests, r)
+		}*/
+	for _, v := range municipalities {
 		r := engine.Request{
 			Url:        fmt.Sprintf("http://%s.weather.com.cn/", v),
-			ParserFunc: parser.ParseRegionList,
+			ParserFunc: parser.RegionParser(""),
 		}
 		requests = append(requests, r)
 	}
+
 	e.Run(requests...)
 }
